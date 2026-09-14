@@ -53,6 +53,7 @@ function broadcast(room: Room, message: Uint8Array, except?: WebSocket): void {
 }
 
 function persistUpdate(room: Room, update: Uint8Array): void {
+  // Serialized via writeChain so clock stays monotonic and compaction does not interleave with appends.
   room.writeChain = room.writeChain
     .then(async () => {
       await appendUpdate(room.docId, update, room.clock++);
