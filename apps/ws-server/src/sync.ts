@@ -186,7 +186,7 @@ function closeConnection(conn: WebSocket, room: Room): void {
   if (room.conns.size === 0) void finalizeRoom(room);
 }
 
-/** Called only after a successful handshake (auth + authorization). */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function setupConnection(conn: WebSocket, room: Room, _user: SessionUser): void {
   room.conns.set(conn, new Set());
 

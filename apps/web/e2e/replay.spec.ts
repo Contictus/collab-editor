@@ -14,7 +14,7 @@ test.describe.configure({ mode: 'serial' });
 let ownerId: string;
 let docId: string;
 let token: string;
-let updateIds: string[] = [];
+const updateIds: string[] = [];
 const steps = ['# Doc\n', 'alpha ', 'beta ', 'gamma'];
 const expected: string[] = [];
 
