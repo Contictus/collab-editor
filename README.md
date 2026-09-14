@@ -68,14 +68,16 @@ pnpm install
 
 # 2. Environment — copy the example and adjust if needed
 cp .env.example .env        # DATABASE_URL + JWT_SECRET (a single root .env, loaded by both apps)
+# For a real deployment, generate a strong secret: openssl rand -base64 48
 
 # 3. Database
-docker compose up -d        # Postgres 16 on :5432
+docker compose up -d        # Postgres 16 on :5432 (healthcheck: pg_isready)
 pnpm db:migrate             # apply Prisma migrations
-pnpm db:generate            # generate the Prisma client
+pnpm db:generate            # generate the Prisma client — required after every schema change
 
 # 4. Run both processes (web :3000 + ws-server :1234)
 pnpm dev
+# If ws-server says JWT_SECRET is not set, ensure .env is at the repo root (not in apps/web).
 ```
 
 Open http://localhost:3000 → register → create a document → open it in two
