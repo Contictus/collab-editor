@@ -42,7 +42,7 @@ export async function loadInto(doc: Y.Doc, documentId: string): Promise<LoadResu
   return { clock: (maxClock._max.clock ?? -1) + 1, sinceSnapshot: updates.length };
 }
 
-/** Append one binary Yjs update to the op log (append-only). */
+/** Append one binary Yjs update to the op log (append-only, never pruned before snapshot). */
 export async function appendUpdate(
   documentId: string,
   update: Uint8Array,
@@ -56,7 +56,8 @@ export async function appendUpdate(
 /**
  * Snapshot compaction: checkpoint the current authoritative state, then prune the
  * updates it covers. Atomic — snapshot insert then prune in one transaction
- * (INVARIANT #3). Returns the number of pruned update rows (0 if nothing to do).
+ * (INVARIANT #3, order is snapshot commit → prune). Returns the number of pruned update rows (0 if nothing to do).
+ * The Y.Doc's state is encoded as a fresh update covering the whole doc — loadInto will reapply it as base.
  */
 export async function compact(documentId: string, doc: Y.Doc): Promise<number> {
   const last = await prisma.documentUpdate.aggregate({
