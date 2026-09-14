@@ -13,7 +13,7 @@ export const SESSION_COOKIE = COOKIE_NAME;
 
 function secretKey(): Uint8Array {
   const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET is not set');
+  if (!secret) throw new Error('JWT_SECRET is not set (set it in root .env, see .env.example)');
   return new TextEncoder().encode(secret);
 }
 
@@ -36,7 +36,11 @@ export async function verifySession(token: string): Promise<SessionUser | null> 
   }
 }
 
-/** Client→server / server→client WS message discriminants (extended in Faz 3). */
+/**
+ * Client→server / server→client WS message discriminants (y-protocols).
+ * Only Sync and Awareness are used — Auth is handled at the HTTP upgrade (INVARIANT #2),
+ * not as a WS message, so no MessageType.Auth exists.
+ */
 export const MessageType = {
   Sync: 0,
   Awareness: 1,
