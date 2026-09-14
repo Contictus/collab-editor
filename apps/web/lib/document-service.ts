@@ -53,7 +53,7 @@ export async function deleteDocument(id: string, ownerId: string): Promise<boole
   return res.count > 0;
 }
 
-/** Returns the document only if it belongs to ownerId, else null. Owner-only ops. */
+/** Returns the document only if it belongs to ownerId, else null. Owner-only ops. Used by rename/delete guards. */
 export function getOwnedDocument(id: string, ownerId: string) {
   return prisma.document.findFirst({
     where: { id, ownerId },

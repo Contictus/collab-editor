@@ -57,7 +57,7 @@ export function planReplay(
   return { snapshot: snapshot?.state ?? null, updates: selected.map((u) => u.update) };
 }
 
-/** Reconstruct the plain text as of update `target`, or null if not replayable. */
+/** Reconstruct the plain text as of update `target`, or null if not replayable. Pure — no DB access, testable in isolation. */
 export function replayText(
   snapshots: SnapshotRow[],
   updates: UpdateRow[],
