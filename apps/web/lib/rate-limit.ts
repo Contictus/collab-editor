@@ -11,9 +11,11 @@ interface Window {
 
 const windows = new Map<string, Window>();
 
+const SWEEP_THRESHOLD = 5000; // start pruning only when map is large — sweep itself is O(n)
+
 /** Prune expired windows opportunistically so the map can't grow unbounded. */
 function sweep(now: number): void {
-  if (windows.size < 5000) return;
+  if (windows.size < SWEEP_THRESHOLD) return;
   for (const [key, w] of windows) if (now >= w.resetAt) windows.delete(key);
 }
 
