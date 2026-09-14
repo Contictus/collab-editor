@@ -47,8 +47,11 @@ export async function shareDocumentAction(
   const parsed = emailSchema.safeParse(formData.get('email'));
   if (!parsed.success) return { error: 'Enter a valid email.' };
 
+  // Normalize: trim and lower-case before lookup — matches auth registration (service.go Trim+ToLower).
+  const email = parsed.data.trim().toLowerCase();
+
   try {
-    const added = await shareDocument(docId, user.id, parsed.data);
+    const added = await shareDocument(docId, user.id, email);
     revalidatePath(`/doc/${docId}`);
     return { ok: `Shared with ${added.email}.` };
   } catch (err) {
