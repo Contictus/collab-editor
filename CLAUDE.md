@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-**Pre-scaffold.** There is no application code yet — the repo currently holds only a
-spec bundle under `docs/`. The canonical, authoritative context lives there; read the
-relevant file before writing code for each phase:
+**Scaffolded — Faz 0–6 implemented.** The monorepo, Prisma schema, auth, document
+CRUD, ws-server sync, persistence and frontend are in place; the spec bundle under
+`docs/` remains the rationale reference. Read the relevant file before extending a phase:
 
 - `docs/CLAUDE.md` — source-of-truth project context (Turkish): decisions, invariants, commands, roadmap.
 - `docs/claude-code-playbook.md` — operational workflow, subagent routing, common-mistake warnings.
 - `docs/collab-editor-spec.zip` — the full intended layout (root docs tree, `README.md`,
-  ADRs 0001–0005, concept notes, and `.claude/agents/`). Not yet extracted.
+  ADRs 0001–0005, concept notes, and `.claude/agents/`). Retained for rationale.
 
 This file is the English summary of that spec. When the two disagree, `docs/CLAUDE.md` wins.
 
