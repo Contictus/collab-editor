@@ -1,3 +1,5 @@
 packages:
   - "apps/*"
   - "packages/*"
+# pnpm-workspace: web and ws-server share db/protocol/shared via workspace:*
+# One .env at root (loadRootEnv) — no per-package env duplication.
