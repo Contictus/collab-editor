@@ -1,0 +1,68 @@
+// Prisma schema — data-model.md. Op-log + snapshot (event-sourcing-lite).
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String                  @id @default(cuid())
+  email         String                  @unique
+  password      String // argon2id hash (Faz 1)
+  createdAt     DateTime                @default(now())
+  documents     Document[]
+  collaborations DocumentCollaborator[]
+}
+
+model Document {
+  id            String                  @id @default(cuid())
+  title         String
+  ownerId       String
+  owner         User                    @relation(fields: [ownerId], references: [id])
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  updates       DocumentUpdate[]
+  snapshots     DocumentSnapshot[]
+  collaborators DocumentCollaborator[]
+}
+
+// Sharing (Faz 8): grants a non-owner user edit access to a document. Access
+// (REST reads + WS handshake) is owner OR collaborator. Owner is implicit and
+// never stored here. Awareness/presence stays ephemeral — unaffected.
+model DocumentCollaborator {
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([documentId, userId])
+  @@index([userId])
+}
+
+// Op log — append-only. Each row is one Yjs binary update.
+model DocumentUpdate {
+  id         BigInt   @id @default(autoincrement())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  update     Bytes // Yjs update (Uint8Array)
+  clock      Int // monotonic order (optional, for audit)
+  createdAt  DateTime @default(now())
+
+  @@index([documentId, id])
+}
+
+// Checkpoint — periodic full-state snapshot.
+model DocumentSnapshot {
+  id           BigInt   @id @default(autoincrement())
+  documentId   String
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  state        Bytes // Y.encodeStateAsUpdate(doc)
+  upToUpdateId BigInt // covers updates up to and including this id
+  createdAt    DateTime @default(now())
+
+  @@index([documentId, id])
+}
