@@ -23,11 +23,16 @@ export function buildDoc(snapshot: Uint8Array | null, updates: Uint8Array[]): Y.
   return doc;
 }
 
+/** Read the current plain text from a live Y.Doc (without cloning). */
 export function docText(doc: Y.Doc): string {
   return doc.getText(TEXT_KEY).toString();
 }
 
-/** Convenience: reconstruct and return the plain text (used by SSR bootstrap). */
+/**
+ * Convenience: reconstruct and return the plain text (used by SSR bootstrap).
+ * Builds a temporary doc, extracts text, then destroys it — callers never
+ * hold the ephemeral doc. Snapshot may be null for brand-new documents.
+ */
 export function loadText(snapshot: Uint8Array | null, updates: Uint8Array[]): string {
   const doc = buildDoc(snapshot, updates);
   const text = docText(doc);
