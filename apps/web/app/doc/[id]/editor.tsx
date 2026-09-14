@@ -80,16 +80,55 @@ export function Editor({
     <div>
       <div
         data-testid="conn-status"
-        style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0', color: '#555' }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          margin: '8px 0',
+          color: '#555',
+          fontSize: 13,
+          letterSpacing: 0.2,
+        }}
       >
-        <span style={{ width: 10, height: 10, borderRadius: '50%', background: dot }} />
+        <span
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            background: dot,
+            boxShadow: conn === 'connected' ? '0 0 0 4px #22a56522' : 'none',
+          }}
+        />
         {label}
+        <span style={{ marginLeft: 8, color: '#999', fontSize: 12 }}>
+          {userName}
+        </span>
+        <span
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 3,
+            background: userColor,
+            border: '1px solid #0001',
+          }}
+          title={userColor}
+        />
       </div>
       <div
         ref={ref}
         data-testid="editor"
-        style={{ border: '1px solid #ddd', borderRadius: 6, minHeight: 240 }}
+        style={{
+          border: '1px solid #ddd',
+          borderRadius: 8,
+          minHeight: 320,
+          background: '#fff',
+          boxShadow: '0 1px 6px #0000a08, 0 1px 2px #00000014',
+          overflow: 'hidden',
+        }}
       />
+      <p style={{ color: '#999', fontSize: 12, margin: '6px 0 0' }}>
+        Markdown · Yjs CRDT · edits merge live — open this doc in another window to see cursors.
+      </p>
     </div>
   );
 }

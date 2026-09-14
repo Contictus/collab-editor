@@ -52,13 +52,26 @@ export function ReplayExplorer({
   }
 
   return (
-    <div style={{ display: 'grid', gap: 10, maxWidth: 640 }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        Replay at{' '}
+    <div style={{ display: 'grid', gap: 12, maxWidth: 680 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 12px',
+          border: '1px solid #e8e8e8',
+          borderRadius: 8,
+          background: '#fafaf7',
+        }}
+      >
+        <span style={{ fontSize: 12, letterSpacing: 0.3, textTransform: 'uppercase', color: '#888' }}>
+          Replay at
+        </span>
         <select
           data-testid="replay-point"
           value={at}
           onChange={(e) => setAt(e.target.value)}
+          style={{ flex: 1, padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6, background: '#fff' }}
         >
           {points.map((p) => (
             <option key={p.id} value={p.id}>
@@ -66,24 +79,41 @@ export function ReplayExplorer({
             </option>
           ))}
         </select>
-        <button type="button" onClick={() => replay(at)} disabled={loading}>
+        <button
+          type="button"
+          onClick={() => replay(at)}
+          disabled={loading}
+          style={{
+            padding: '6px 12px',
+            borderRadius: 6,
+            border: '1px solid #111',
+            background: '#111',
+            color: '#fff',
+            cursor: loading ? 'wait' : 'pointer',
+          }}
+        >
           {loading ? 'Replaying…' : 'Replay'}
         </button>
-      </label>
-      {error && <p style={{ color: 'crimson', margin: 0 }}>{error}</p>}
+      </div>
+      <p style={{ margin: 0, color: '#999', fontSize: 12 }}>
+        Picks update #id in the surviving op-log and reconstructs text at that point (snapshot + updates up to id).
+      </p>
+      {error && <p style={{ color: 'crimson', margin: 0, fontSize: 13 }}>{error}</p>}
       {text !== null && (
         <pre
           data-testid="replay-text"
           style={{
             border: '1px solid #ddd',
-            borderRadius: 6,
+            borderRadius: 8,
             padding: 12,
-            background: '#fafafa',
+            background: '#fff',
             whiteSpace: 'pre-wrap',
             margin: 0,
+            minHeight: 80,
+            boxShadow: '0 1px 4px #0000000a',
           }}
         >
-          {text === '' ? '(empty)' : text}
+          {text === '' ? '(empty document)' : text}
         </pre>
       )}
     </div>
