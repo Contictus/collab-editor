@@ -20,4 +20,5 @@ export function loadRootEnv(): void {
     if (parent === dir) break;
     dir = parent;
   }
+  // No .env found — rely on process env (CI/Docker). Caller should ensure DATABASE_URL/JWT_SECRET are set.
 }

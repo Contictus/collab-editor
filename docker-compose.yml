@@ -3,6 +3,7 @@ services:
     image: postgres:16
     container_name: collab-editor-pg
     restart: unless-stopped
+    # Single service: ws-server and web both use packages/db (one DATABASE_URL). No app container — pnpm dev runs on host.
     environment:
       POSTGRES_USER: collab
       POSTGRES_PASSWORD: collab
