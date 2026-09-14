@@ -73,6 +73,7 @@ export function Editor({
     };
   }, [docId, userName, userColor]);
 
+  // Connection label: synced means Yjs syncStep2 received, not just socket open.
   const label = conn === 'connected' ? (synced ? 'connected · synced' : 'connected · syncing') : conn;
   const dot = conn === 'connected' ? '#22a565' : conn === 'connecting' ? '#e0a800' : '#c0392b';
 
