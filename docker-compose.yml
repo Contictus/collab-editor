@@ -9,7 +9,9 @@ services:
       POSTGRES_PASSWORD: collab
       POSTGRES_DB: collab
     ports:
-      - "5432:5432"
+      # Host 5433: native Postgres (postgresql-x64-18) squats host 5432 on dev
+      # machines. Container port stays 5432 (in-network DATABASE_URL unchanged).
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
