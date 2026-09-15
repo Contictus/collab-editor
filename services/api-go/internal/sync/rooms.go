@@ -189,17 +189,27 @@ func (r *Registry) Get(ctx context.Context, docID string) (*Room, error) {
 }
 
 // open builds a room outside the registry lock (load may hit the DB in F5).
+// The broadcast hook attaches AFTER load returns, so replayed history is
+// never rebroadcast (mirrors: load BEFORE the update listener).
 func (r *Registry) open(ctx context.Context, docID string) (*Room, error) {
 	doc, err := r.load(ctx, docID)
 	if err != nil {
 		return nil, err
 	}
-	return &Room{
+	room := &Room{
 		ID:       docID,
 		doc:      doc,
 		presence: crdt.NewPresence(),
 		conns:    make(map[Sender]map[uint64]struct{}),
-	}, nil
+	}
+	room.doc.OnUpdate(func(u []byte, origin any) {
+		var except Sender
+		if s, ok := origin.(Sender); ok {
+			except = s
+		}
+		room.Broadcast(crdt.EncodeUpdateFrame(u), except)
+	})
+	return room, nil
 }
 
 // EvictIfEmpty unlists and destroys the room when its last connection left

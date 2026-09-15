@@ -84,7 +84,7 @@ func TestUpdateBroadcastFrame(t *testing.T) {
 
 	// Sync first so clocks align, then broadcast the delta.
 	var frames [][]byte
-	unsub := server.OnUpdate(func(u []byte) { frames = append(frames, EncodeUpdateFrame(u)) })
+	unsub := server.OnUpdate(func(u []byte, _ any) { frames = append(frames, EncodeUpdateFrame(u)) })
 	server.InsertText(0, "live")
 	unsub()
 	if len(frames) != 1 {

@@ -43,7 +43,7 @@ func TestOnUpdateFires(t *testing.T) {
 	d := New()
 	defer d.Destroy()
 	var seen [][]byte
-	unsub := d.OnUpdate(func(u []byte) { seen = append(seen, u) })
+	unsub := d.OnUpdate(func(u []byte, _ any) { seen = append(seen, u) })
 	d.InsertText(0, "x")
 	unsub()
 	d.InsertText(1, "y")

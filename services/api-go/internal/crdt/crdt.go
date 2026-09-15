@@ -74,10 +74,11 @@ func (d *Doc) DeleteText(index, length int) {
 	})
 }
 
-// OnUpdate subscribes to state-mutating updates (doc.on('update')). F5 uses it
-// to append to the op log and broadcast. Returns an unsubscribe func.
-func (d *Doc) OnUpdate(fn func(update []byte)) func() {
-	return d.inner.OnUpdate(func(update []byte, _ any) { fn(update) })
+// OnUpdate subscribes to state-mutating updates (doc.on('update')). The origin
+// is whatever was passed as origin to Apply/HandleSyncMessage — F4 uses it to
+// skip the sender on broadcast. Returns an unsubscribe func.
+func (d *Doc) OnUpdate(fn func(update []byte, origin any)) func() {
+	return d.inner.OnUpdate(func(update []byte, origin any) { fn(update, origin) })
 }
 
 // BuildDoc rebuilds a document from a snapshot plus the ordered updates after
