@@ -18,5 +18,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # Go backend (F0 skeleton, opt-in). Default `docker compose up` değişmez:
+  # sadece `--profile go` ile ayağa kalkar. Node servislerine dokunmaz.
+  api-go:
+    build: ./services/api-go
+    container_name: collab-editor-api-go
+    restart: unless-stopped
+    profiles: ["go"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      API_PORT: "8080"
+      DATABASE_URL: "postgresql://collab:collab@postgres:5432/collab?schema=public"
+    ports:
+      - "8080:8080"
+
 volumes:
   pgdata:

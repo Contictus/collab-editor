@@ -1,0 +1,25 @@
+# Go CI (F0) — Node pipeline'ına dokunmaz, sadece services/api-go.
+name: go
+
+on:
+  push:
+    paths:
+      - "services/api-go/**"
+      - ".github/workflows/go.yml"
+  pull_request:
+    paths:
+      - "services/api-go/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api-go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - run: go vet ./...
+      - run: go build ./...

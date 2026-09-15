@@ -20,6 +20,13 @@ packages/db/generated/
 npm-debug.log*
 pnpm-debug.log*
 
+# go (services/api-go)
+*.exe
+*.out
+/bin/
+/dist-go/
+go.work.sum
+
 # os / editor
 .DS_Store
 Thumbs.db
