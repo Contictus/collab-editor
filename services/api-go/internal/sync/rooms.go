@@ -141,6 +141,16 @@ type Registry struct {
 	rooms   map[string]*Room
 	pending map[string]*call
 	load    Loader
+	// onEvict runs after delist, before destroy (F5 persistence finalizes
+	// the checkpoint here). Unlocked — it may hit the DB.
+	onEvict func(*Room)
+}
+
+// SetEvictHook registers the last-leave hook (persist.Manager.Finalize).
+func (r *Registry) SetEvictHook(fn func(*Room)) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.onEvict = fn
 }
 
 // NewRegistry creates a registry. A nil loader serves empty docs (F4); F5
@@ -213,16 +223,21 @@ func (r *Registry) open(ctx context.Context, docID string) (*Room, error) {
 }
 
 // EvictIfEmpty unlists and destroys the room when its last connection left
-// (mirrors finalizeRoom; F5 adds the final snapshot checkpoint before destroy).
+// (mirrors finalizeRoom; the evict hook checkpoints first when set).
 // Returns true when the room was evicted.
 func (r *Registry) EvictIfEmpty(room *Room) bool {
 	r.mu.Lock()
-	defer r.mu.Unlock()
 	current, ok := r.rooms[room.ID]
 	if !ok || current != room || room.MemberCount() != 0 {
+		r.mu.Unlock()
 		return false
 	}
 	delete(r.rooms, room.ID)
+	hook := r.onEvict
+	r.mu.Unlock()
+	if hook != nil {
+		hook(room)
+	}
 	room.destroy()
 	return true
 }
