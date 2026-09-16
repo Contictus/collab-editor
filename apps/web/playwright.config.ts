@@ -9,11 +9,11 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Requires Postgres up (docker compose up -d) and migrations applied.
  *
- * WS_GO=1 runs the suite against the Go sync server (:8080) instead of Node
- * (:1234). DATABASE_URL + JWT_SECRET must be exported (the Go service does
- * not read the root .env file); the web app keeps loading them itself.
+ * WS_NODE=1 runs the suite against the legacy Node ws-server (:1234) instead
+ * of Go (:8080, the default). Both servers read the root .env; exported
+ * DATABASE_URL + JWT_SECRET take precedence.
  */
-const useGo = process.env.WS_GO === '1';
+const useGo = process.env.WS_NODE !== '1';
 const wsPort = useGo ? 8080 : 1234;
 export default defineConfig({
   testDir: './e2e',
