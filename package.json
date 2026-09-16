@@ -7,7 +7,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "concurrently -n web,ws -c blue,magenta \"pnpm --filter web dev\" \"pnpm --filter ws-server dev\"",
+    "dev": "concurrently -n web,go -c blue,magenta \"pnpm --filter web dev\" \"pnpm dev:go\"",
+    "dev:node-ws": "concurrently -n web,ws -c blue,magenta \"pnpm --filter web dev\" \"pnpm --filter ws-server dev\"",
     "build": "pnpm -r build",
     "db:migrate": "pnpm --filter db migrate",
     "db:studio": "pnpm --filter db studio",
