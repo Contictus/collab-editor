@@ -29,6 +29,9 @@ type Server struct {
 	authz      Authorizer
 	maxPayload int64
 	upgrader   websocket.Upgrader
+
+	peersMu sync.Mutex
+	peers   map[*peer]struct{}
 }
 
 // NewServer builds the handler. maxPayload <= 0 selects DefaultMaxPayload.
@@ -41,6 +44,7 @@ func NewServer(secret string, reg *Registry, az Authorizer, maxPayload int64) *S
 		registry:   reg,
 		authz:      az,
 		maxPayload: maxPayload,
+		peers:      make(map[*peer]struct{}),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  4096,
 			WriteBufferSize: 4096,
@@ -68,6 +72,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p := &peer{conn: conn}
+	s.track(p)
 	room.Join(p)
 	// Handshake opener (mirrors setupConnection: step1 immediately).
 	if err := p.Send(crdt.SyncStep1Frame(room.Document())); err != nil {
@@ -148,12 +153,40 @@ func (s *Server) onAwareness(room *Room, p *peer, payload []byte) {
 // final snapshot).
 func (s *Server) close(room *Room, p *peer) {
 	p.close()
+	s.untrack(p)
 	removal, empty := room.Leave(p)
 	if removal != nil {
 		room.Broadcast(crdt.EncodeAwarenessFrame(removal), nil)
 	}
 	if empty {
 		s.registry.EvictIfEmpty(room)
+	}
+}
+
+// track/untrack the live peers for shutdown.
+func (s *Server) track(p *peer) {
+	s.peersMu.Lock()
+	defer s.peersMu.Unlock()
+	s.peers[p] = struct{}{}
+}
+
+func (s *Server) untrack(p *peer) {
+	s.peersMu.Lock()
+	defer s.peersMu.Unlock()
+	delete(s.peers, p)
+}
+
+// CloseConnections drops every live socket (shutdown path). Loops exit with
+// read errors, evict hooks finalize, then the caller drains and closes the pool.
+func (s *Server) CloseConnections() {
+	s.peersMu.Lock()
+	peers := make([]*peer, 0, len(s.peers))
+	for p := range s.peers {
+		peers = append(peers, p)
+	}
+	s.peersMu.Unlock()
+	for _, p := range peers {
+		p.close()
 	}
 }
 
