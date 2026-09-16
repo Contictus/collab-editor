@@ -90,8 +90,8 @@ func (s *Store) GetAccessibleDocument(ctx context.Context, id, userID string) (*
 	var d DocumentSummary
 	var ownerID string
 	err := s.pool.QueryRow(ctx,
-		`SELECT "id", "title", "ownerId" FROM "Document" WHERE `+accessPredicate, id, userID,
-	).Scan(&d.ID, &d.Title, &ownerID)
+		`SELECT "id", "title", "ownerId", "updatedAt" FROM "Document" WHERE `+accessPredicate, id, userID,
+	).Scan(&d.ID, &d.Title, &ownerID, &d.UpdatedAt)
 	if err != nil {
 		if isNoRows(err) {
 			return nil, nil
