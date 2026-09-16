@@ -71,7 +71,7 @@ cp .env.example .env        # DATABASE_URL + JWT_SECRET (a single root .env, loa
 # For a real deployment, generate a strong secret: openssl rand -base64 48
 
 # 3. Database
-docker compose up -d        # Postgres 16 on :5432 (healthcheck: pg_isready)
+docker compose up -d        # Postgres 16 (host :5433 — native PG often squats 5432)
 pnpm db:migrate             # apply Prisma migrations
 pnpm db:generate            # generate the Prisma client — required after every schema change
 
@@ -95,6 +95,17 @@ text at any past point.
 | `pnpm test` | vitest unit tests (all packages) |
 | `pnpm test:e2e` | Playwright multi-client E2E (auto-boots both servers) |
 | `pnpm typecheck` | `tsc --noEmit` across the workspace |
+| `pnpm dev:go` · `pnpm migrate:go` · `pnpm test:go` | Go backend: serve (:8080), migrate, test |
+| `WS_GO=1 pnpm --filter web test:e2e` | E2E against the Go sync server (:8080) |
+
+### Go backend (dual-run)
+
+`services/api-go` mirrors the Node backend on :8080 — same Postgres schema,
+same JWT cookie, same y-protocols wire format. It runs alongside Node
+(`docker compose --profile go up api-go`, or `pnpm dev:go` with
+`DATABASE_URL` + `JWT_SECRET` exported). Point the editor at it with
+`NEXT_PUBLIC_WS_URL="ws://localhost:8080"`; the full Playwright suite passes
+against it (`WS_GO=1`).
 
 ---
 
