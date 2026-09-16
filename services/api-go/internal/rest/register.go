@@ -33,6 +33,10 @@ func isUniqueViolation(err error) bool {
 // handleRegister creates the user and signs them in (registerAction parity,
 // JSON surface): 201 + user, 409 on taken email, 400 on bad shape.
 func (a *API) handleRegister(w http.ResponseWriter, r *http.Request) {
+	// REGISTER_PER_IP first (even malformed floods count), mirrors registerAction.
+	if a.throttled(w, "register:ip:"+clientIP(r), 5, 600_000, "Too many attempts. Please try again later.") {
+		return
+	}
 	form, ok := decodeBody[credentialsForm](r)
 	if !ok {
 		writeErr(w, http.StatusBadRequest, "invalid request body")

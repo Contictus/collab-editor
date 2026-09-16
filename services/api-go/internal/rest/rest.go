@@ -14,17 +14,50 @@ package rest
 import (
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
+	"strings"
 
 	"github.com/Contictus/collab-editor/services/api-go/internal/db"
 )
 
 // API wires handlers to a store. SecureCookies mirrors the Node behavior
-// (Secure on in production, off in dev).
+// (Secure on in production, off in dev). Limiter throttles auth attempts
+// when set (nil disables, e.g. unit tests).
 type API struct {
 	Store         *db.Store
 	Secret        string
 	SecureCookies bool
+	Limiter       *RateLimiter
+}
+
+// clientIP mirrors the Server Action helper: first X-Forwarded-For entry,
+// X-Real-Ip, RemoteAddr host, else 'local' in unproxied dev.
+func clientIP(r *http.Request) string {
+	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+		if first, _, _ := strings.Cut(fwd, ","); strings.TrimSpace(first) != "" {
+			return strings.TrimSpace(first)
+		}
+	}
+	if ip := strings.TrimSpace(r.Header.Get("X-Real-Ip")); ip != "" {
+		return ip
+	}
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil && host != "" {
+		return host
+	}
+	return "local"
+}
+
+// throttled reports whether key exceeded its budget (429 + message when so).
+func (a *API) throttled(w http.ResponseWriter, key string, limit int, windowMs int64, msg string) bool {
+	if a.Limiter == nil {
+		return false
+	}
+	if ok, _ := a.Limiter.Allow(key, limit, windowMs); !ok {
+		writeErr(w, http.StatusTooManyRequests, msg)
+		return true
+	}
+	return false
 }
 
 // maxBody caps JSON request bodies (auth/doc forms are tiny).

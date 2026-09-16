@@ -15,8 +15,9 @@ import (
 
 	"github.com/Contictus/collab-editor/services/api-go/internal/config"
 	"github.com/Contictus/collab-editor/services/api-go/internal/db"
-	gosync "github.com/Contictus/collab-editor/services/api-go/internal/sync"
 	"github.com/Contictus/collab-editor/services/api-go/internal/persist"
+	"github.com/Contictus/collab-editor/services/api-go/internal/rest"
+	gosync "github.com/Contictus/collab-editor/services/api-go/internal/sync"
 )
 
 func health(reg *gosync.Registry) http.HandlerFunc {
@@ -93,8 +94,16 @@ func runWS(ctx context.Context, cfg config.Config, mux *http.ServeMux) {
 		}
 	})
 	mux.HandleFunc("/health", health(reg))
+	// JSON API (F6) alongside sync: /api/* wins over the "/" WS catch-all.
+	api := &rest.API{
+		Store:         store,
+		Secret:        secret,
+		SecureCookies: os.Getenv("NODE_ENV") == "production",
+		Limiter:       rest.NewRateLimiter(),
+	}
+	api.Routes(mux)
 	mux.Handle("/", gosync.NewServer(secret, reg, store, maxPayload))
-	log.Printf("[api-go] listening on :%s (GET /health, WS y-protocols sync+awareness)", cfg.Port)
+	log.Printf("[api-go] listening on :%s (GET /health, /api/*, WS y-protocols sync+awareness)", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, mux); err != nil {
 		log.Fatal(err)
 	}
