@@ -15,8 +15,9 @@ durability by an **append-only op log + periodic snapshot checkpoint**
 ## Architecture
 
 Two processes share one Postgres schema. The Next app owns auth, SSR, and CRUD;
-the standalone ws-server owns live sync and persistence. They do **not** talk to
-each other directly — the database is the only shared state.
+the Go service (`services/api-go`) owns live sync, persistence, and a mirror
+JSON API. They do **not** talk to each other directly — the database is the
+only shared state.
 
 ```mermaid
 flowchart LR
@@ -29,24 +30,29 @@ flowchart LR
     API["Route handlers<br/>/api/health, /audit, /replay"]
   end
 
-  subgraph ws["apps/ws-server — Node ws (:1234)"]
+  subgraph go["services/api-go — Go (:8080)"]
     ROOM["authoritative Y.Doc per room<br/>(one instance, one process)"]
+    REST["JSON API<br/>/api/auth, /api/documents,<br/>/audit, /replay"]
   end
 
   PG[("PostgreSQL 16<br/>User · Document<br/>DocumentUpdate (op log)<br/>DocumentSnapshot")]
 
   CM -- "HTTP: login, list, open (SSR)" --> RSC
   CM -- "WS: y-protocols sync + awareness<br/>(JWT cookie verified at handshake)" --> ROOM
+  CM -. "HTTP: JSON API (mirror)" .-> REST
   RSC --> PG
   API --> PG
   ROOM -- "append binary update · load-on-open · snapshot compaction" --> PG
+  REST --> PG
 ```
 
 **Fixed decisions** (rationale in `docs/adr`): Yjs `Y.Text` · CodeMirror 6 +
-`y-codemirror.next` · `y-protocols` wire format · custom `ws` server as a separate
-process (Next App Router has no native WS) · Postgres op log + snapshot compaction ·
-SSR bootstrap via Server Component, client WS takes over · Prisma ORM · JWT in an
-httpOnly cookie, verified at both REST and the WS handshake.
+`y-codemirror.next` · `y-protocols` wire format · Go sync server as a separate
+process (Next App Router has no native WS; pure-Go Yjs via ygo, wire-compatible
+with yjs 13) · Postgres op log + snapshot compaction ·
+SSR bootstrap via Server Component, client WS takes over · Prisma ORM (Node) +
+pgx/goose (Go, same tables) · JWT in an httpOnly cookie, verified at both REST
+and the WS handshake.
 
 ### Invariants (never violated)
 
@@ -75,9 +81,9 @@ docker compose up -d        # Postgres 16 (host :5433 — native PG often squats
 pnpm db:migrate             # apply Prisma migrations
 pnpm db:generate            # generate the Prisma client — required after every schema change
 
-# 4. Run both processes (web :3000 + ws-server :1234)
+# 4. Run both processes (web :3000 + Go :8080)
 pnpm dev
-# If ws-server says JWT_SECRET is not set, ensure .env is at the repo root (not in apps/web).
+# The Go service reads the same root .env (dotenv autoload, like Node).
 ```
 
 Open http://localhost:3000 → register → create a document → open it in two
@@ -98,14 +104,12 @@ text at any past point.
 | `pnpm dev:go` · `pnpm migrate:go` · `pnpm test:go` | Go backend: serve (:8080), migrate, test |
 | `WS_GO=1 pnpm --filter web test:e2e` | E2E against the Go sync server (:8080) |
 
-### Go backend (dual-run)
+### Go backend
 
-`services/api-go` mirrors the Node backend on :8080 — same Postgres schema,
-same JWT cookie, same y-protocols wire format. It runs alongside Node
-(`docker compose --profile go up api-go`, or `pnpm dev:go` with
-`DATABASE_URL` + `JWT_SECRET` exported). Point the editor at it with
-`NEXT_PUBLIC_WS_URL="ws://localhost:8080"`; the full Playwright suite passes
-against it (`WS_GO=1`).
+`services/api-go` is the sync server on :8080 — same Postgres schema, same JWT
+cookie, same y-protocols wire format (byte-proven against yjs 13 both ways).
+`pnpm dev` runs it with the web app; `docker compose --profile go up api-go`
+containerizes it. The full Playwright suite runs against it by default.
 
 ---
 
@@ -114,7 +118,8 @@ against it (`WS_GO=1`).
 ```
 apps/
   web/          Next.js App Router — UI, Server Actions, REST auth, audit/replay endpoints
-  ws-server/    Standalone Node ws server — Yjs sync + persistence
+services/
+  api-go/       Go sync server — y-protocols sync + awareness, op-log persistence, JSON API
 packages/
   db/           Prisma schema + client (imported by both apps; loads the root .env)
   protocol/     WS message types + JWT sign/verify (shared REST/WS identity)
@@ -128,11 +133,11 @@ packages/
 - **Unit** (`pnpm test`, vitest): password hashing, session tokens, CRDT
   reconstruction, op-log replay planning (pure, DB-free).
 - **E2E** (`pnpm test:e2e`, Playwright): the config boots the web app and
-  ws-server itself (reusing any already running), then:
+  the Go sync server itself (reusing any already running), then:
   - `collab.spec` — two clients co-edit, remote cursors, offline edit merges on reconnect.
   - `concurrent.spec` — four clients converge; simultaneous same-caret inserts lose nothing.
   - `replay.spec` — the replay endpoint reconstructs exact text at a known point; owner-gated.
-- **Load note** (capacity probe): `pnpm --filter ws-server exec tsx scripts/faz7-load.ts [N]`
+- **Load note** (capacity probe): `pnpm --filter web exec tsx scripts/faz7-load.ts [N]`
   — N clients in one room converge with no lost writes (single-node model, invariant #4).
 - **Persistence smoke** (real DB): `apps/*/scripts/faz*-smoke.ts` per phase.
 
