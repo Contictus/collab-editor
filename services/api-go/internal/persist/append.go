@@ -19,6 +19,12 @@ func (m *Manager) Append(docID string, update []byte) {
 		_ = m.store.AppendUpdate(ctx, docID, owned, p.clock)
 		p.clock++
 		p.sinceSnapshot++
+		m.mu.Lock()
+		doc := m.docs[docID]
+		m.mu.Unlock()
+		if doc != nil {
+			m.maybeCompact(docID, p, doc)
+		}
 	})
 }
 

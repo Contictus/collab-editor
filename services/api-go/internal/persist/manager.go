@@ -30,6 +30,7 @@ type Manager struct {
 
 	mu         sync.Mutex
 	persisters map[string]*Persister
+	docs       map[string]*crdt.Doc
 }
 
 // NewManager creates the manager. threshold <= 0 selects DefaultThreshold.
@@ -37,7 +38,8 @@ func NewManager(store *db.Store, threshold int) *Manager {
 	if threshold <= 0 {
 		threshold = DefaultThreshold
 	}
-	return &Manager{store: store, threshold: threshold, persisters: make(map[string]*Persister)}
+	return &Manager{store: store, threshold: threshold,
+		persisters: make(map[string]*Persister), docs: make(map[string]*crdt.Doc)}
 }
 
 // Load rebuilds the room doc from snapshot + replay and registers its
@@ -55,6 +57,7 @@ func (m *Manager) Load(ctx context.Context, docID string) (*crdt.Doc, error) {
 	m.mu.Lock()
 	old := m.persisters[docID]
 	m.persisters[docID] = &Persister{docID: docID, clock: st.Clock, sinceSnapshot: st.SinceSnapshot, worker: NewWorker()}
+	m.docs[docID] = doc
 	m.mu.Unlock()
 	if old != nil {
 		old.worker.Stop()
