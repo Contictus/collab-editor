@@ -14,6 +14,9 @@
     "db:generate": "pnpm --filter db generate",
     "test": "pnpm -r --if-present test",
     "test:e2e": "pnpm --filter web test:e2e",
+    "test:go": "go -C services/api-go test ./...",
+    "dev:go": "go -C services/api-go run ./cmd/server serve-ws",
+    "migrate:go": "go -C services/api-go run ./cmd/server migrate",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint ."
   },
