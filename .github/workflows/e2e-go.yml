@@ -1,6 +1,6 @@
-# E2E against the Go sync server (F7 cutover gate). Boots Postgres, migrates,
-# then runs the full Playwright suite with WS_GO=1 (Go :8080 serves sync;
-# Node :1234 never boots).
+# E2E against the Go sync server (default since F8; WS_NODE=1 selects legacy
+# Node). Boots Postgres, migrates, then runs the full Playwright suite with
+# Go :8080 serving sync (Node :1234 never boots).
 name: e2e-go
 
 on:
@@ -36,7 +36,6 @@ jobs:
     env:
       DATABASE_URL: postgresql://collab:collab@localhost:5432/collab?schema=public
       JWT_SECRET: ci-e2e-secret
-      WS_GO: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
