@@ -16,6 +16,7 @@ import (
 	"github.com/Contictus/collab-editor/services/api-go/internal/config"
 	"github.com/Contictus/collab-editor/services/api-go/internal/db"
 	gosync "github.com/Contictus/collab-editor/services/api-go/internal/sync"
+	"github.com/Contictus/collab-editor/services/api-go/internal/persist"
 )
 
 func health(reg *gosync.Registry) http.HandlerFunc {
@@ -54,8 +55,8 @@ func main() {
 }
 
 // runWS serves the y-protocols sync endpoint alongside /health.
-// `server serve-ws` — the F4 live server (rooms + handshake, empty docs;
-// F5 swaps the loader for op-log persistence). Dual-run safe: separate port.
+// `server serve-ws` — the F5 live server (rooms + handshake + op-log
+// persistence with snapshot compaction). Dual-run safe: separate port.
 func runWS(ctx context.Context, cfg config.Config, mux *http.ServeMux) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
@@ -76,7 +77,21 @@ func runWS(ctx context.Context, cfg config.Config, mux *http.ServeMux) {
 			maxPayload = n
 		}
 	}
-	reg := gosync.NewRegistry(nil)
+	// Op-log persistence (F5): DB-backed loader + last-leave checkpoint.
+	// Compaction threshold env-overridable for tests (mirrors WS_SNAPSHOT_THRESHOLD).
+	threshold := persist.DefaultThreshold
+	if v := os.Getenv("WS_SNAPSHOT_THRESHOLD"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			threshold = n
+		}
+	}
+	mgr := persist.NewManager(store, threshold)
+	reg := gosync.NewRegistry(mgr.Load)
+	reg.SetEvictHook(func(room *gosync.Room) {
+		if _, err := mgr.Finalize(room.ID); err != nil {
+			log.Printf("[api-go] finalize (doc %s): %v", room.ID, err)
+		}
+	})
 	mux.HandleFunc("/health", health(reg))
 	mux.Handle("/", gosync.NewServer(secret, reg, store, maxPayload))
 	log.Printf("[api-go] listening on :%s (GET /health, WS y-protocols sync+awareness)", cfg.Port)
