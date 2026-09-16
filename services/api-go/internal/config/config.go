@@ -22,6 +22,7 @@ type Config struct {
 // Load reads the process environment. requireDB controls whether a missing
 // DATABASE_URL is an error (migrations, API) or tolerated (bare /health).
 func Load(requireDB bool) (Config, error) {
+	LoadRootEnv()
 	cfg := Config{
 		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),
 		Port:        strings.TrimSpace(os.Getenv("API_PORT")),
