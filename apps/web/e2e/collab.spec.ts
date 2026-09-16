@@ -29,7 +29,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  // Let the ws-server finish its final-snapshot write for the closed room before
+  // Let the sync server finish its final-snapshot write for the closed room before
   // deleting, so we don't race its insert. onDelete: Cascade removes op log/snapshots.
   await new Promise((r) => setTimeout(r, 1500));
   await prisma.document.deleteMany({ where: { id: docId } });

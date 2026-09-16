@@ -39,7 +39,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await new Promise((r) => setTimeout(r, 1500)); // let ws-server flush final snapshot
+  await new Promise((r) => setTimeout(r, 1500)); // let sync server flush final snapshot
   await prisma.document.deleteMany({ where: { id: docId } });
   await prisma.user.deleteMany({ where: { id: { in: [ownerId, collaboratorId] } } });
   await prisma.$disconnect();

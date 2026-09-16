@@ -1,4 +1,3 @@
-import { WebSocket as NodeWS } from 'ws';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 import { prisma } from 'db';
@@ -42,7 +41,7 @@ async function main() {
   const token = await signSession({ id: owner.id, email: owner.email });
   const opts = {
     params: { token },
-    WebSocketPolyfill: NodeWS as unknown as typeof WebSocket,
+    WebSocketPolyfill: WebSocket,
     connect: true,
   };
 

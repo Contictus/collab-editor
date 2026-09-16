@@ -63,7 +63,7 @@ export function getOwnedDocument(id: string, ownerId: string) {
 
 /**
  * Access gate (Faz 8): the document if the user is the owner OR a collaborator,
- * else null (404/403 upstream). This is the SAME predicate the ws-server enforces
+ * else null (404/403 upstream). This is the SAME predicate the Go sync server enforces
  * at the handshake — REST reads and live sync share one authorization model.
  */
 export async function getAccessibleDocument(id: string, userId: string) {

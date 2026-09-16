@@ -2,8 +2,8 @@ import * as Y from 'yjs';
 
 /**
  * CRDT reconstruction shared by web (SSR read-only bootstrap, Faz 2) and
- * ws-server (authoritative load-on-open, Faz 4). Keeping the Y.Text field name
- * and the rebuild algorithm in one place guarantees server SSR, ws-server, and
+ * the Go service (authoritative load-on-open, Faz 4). Keeping the Y.Text field name
+ * and the rebuild algorithm in one place guarantees server SSR, Go service, and
  * the client editor all agree.
  *
  * INVARIANT #1: state is always applied as binary Yjs updates — never text diffs.

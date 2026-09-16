@@ -30,7 +30,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  // Let the ws-server flush its final snapshot for the closed room (cascade deletes op log).
+  // Let the sync server flush its final snapshot for the closed room (cascade deletes op log).
   await new Promise((r) => setTimeout(r, 1500));
   await prisma.document.deleteMany({ where: { id: docId } });
   await prisma.user.deleteMany({ where: { id: ownerId } });

@@ -19,7 +19,7 @@ function check(name: string, cond: boolean, extra = '') {
   if (!cond) failures++;
 }
 
-/** One incremental Yjs update per step (mirrors ws-server appendUpdate rows). */
+/** One incremental Yjs update per step (mirrors op-log appendUpdate rows). */
 function buildOpLog(steps: string[]): { updates: Uint8Array[]; expected: string[] } {
   const doc = new Y.Doc();
   const text = doc.getText(TEXT_KEY);

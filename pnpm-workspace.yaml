@@ -1,5 +1,5 @@
 packages:
   - "apps/*"
   - "packages/*"
-# pnpm-workspace: web and ws-server share db/protocol/shared via workspace:*
+# pnpm-workspace: web app plus shared packages (Go lives in services/api-go, own module)
 # One .env at root (loadRootEnv) — no per-package env duplication.

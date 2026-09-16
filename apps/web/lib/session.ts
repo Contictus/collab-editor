@@ -6,7 +6,7 @@ import type { SessionUser } from 'shared';
 
 /**
  * Session cookie management for the web app (RSC + Server Actions). The JWT is
- * the same one the ws-server verifies at handshake (protocol package), so REST
+ * the same one the Go sync server verifies at handshake (protocol package), so REST
  * and WS share one identity.
  */
 

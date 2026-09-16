@@ -6,8 +6,8 @@ import { loadRootEnv } from './env';
 loadRootEnv();
 
 /**
- * Single shared Prisma client. Both apps import this; the schema lives here so
- * web and ws-server use the same model definitions (see CLAUDE.md layout rule).
+ * Single shared Prisma client. The schema lives here so web and the Go service
+ * (same tables via pgx) use the same model definitions (see CLAUDE.md layout rule).
  * Guard against multiple instances during Next.js dev hot-reload — without this,
  * every HMR reload would leak a DB connection pool.
  */

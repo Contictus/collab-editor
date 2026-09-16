@@ -3,8 +3,8 @@ import { dirname, join } from 'node:path';
 import { config } from 'dotenv';
 
 /**
- * Monorepo env loader. web (Next, cwd=apps/web) and ws-server (cwd=apps/ws-server)
- * both live under the repo root where the single `.env` sits. Walk up from cwd to
+ * Monorepo env loader. web (Next, cwd=apps/web) and scripts (cwd varies) all
+ * live under the repo root where the single `.env` sits. Walk up from cwd to
  * find it, so both processes and the Prisma CLI share one env file — no per-app
  * duplication of DATABASE_URL / JWT_SECRET.
  */

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { signSession, verifySession } from 'protocol';
 
 /**
- * The JWT layer shared by web (cookie) and ws-server (handshake). getSession /
+ * The JWT layer shared by web (cookie) and the Go sync server (handshake). getSession /
  * requireSession wrap these; the cookie plumbing itself is exercised via the app.
  */
 describe('session JWT (protocol)', () => {

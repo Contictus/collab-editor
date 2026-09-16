@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Shared types and zod schemas used by both apps (web, ws-server).
+ * Shared types and zod schemas used by the web app (UI, actions, API contracts).
  * Faz 0: auth + document input shapes. Extended in later phases.
  */
 

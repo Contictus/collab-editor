@@ -4,7 +4,7 @@ import { TEXT_KEY } from 'shared/crdt';
 import { type SnapshotRow, type UpdateRow, planReplay, replayText } from './replay';
 
 /**
- * Build an op log the way the ws-server does: one incremental Yjs update per edit,
+ * Build an op log the way the sync server does: one incremental Yjs update per edit,
  * captured off the doc's 'update' event. Returns the rows (id = 1..n) plus the
  * expected cumulative text after each step, for replay assertions.
  */

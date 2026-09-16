@@ -3,7 +3,7 @@ import type { SessionUser } from 'shared';
 
 /**
  * Shared auth + WS protocol surface. Both web (REST/Server Actions) and
- * ws-server (handshake) sign/verify the SAME JWT, so identity is unified.
+ * the Go sync server (handshake) sign/verify the SAME JWT, so identity is unified.
  * Faz 0 provides the token helpers + message-type placeholders; the sync
  * message wire format itself is y-protocols binary (Faz 3).
  */
