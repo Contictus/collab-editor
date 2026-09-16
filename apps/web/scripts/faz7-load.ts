@@ -12,10 +12,10 @@ import { TEXT_KEY } from 'shared/crdt';
  * them. Confirms the single-node model (INVARIANT #4) holds a small crowd and
  * loses no writes under concurrent load.
  *
- * Run (ws-server must be up):  pnpm --filter ws-server exec tsx scripts/faz7-load.ts [N]
- * Against Go: WS_URL=ws://localhost:8080 (same line) tsx scripts/faz7-load.ts [N]
+ * Run (Go sync server must be up):  pnpm --filter web exec tsx scripts/faz7-load.ts [N]
+ * Override target: WS_URL=ws://localhost:XXXX tsx scripts/faz7-load.ts [N]
  */
-const WS_URL = process.env.WS_URL ?? 'ws://localhost:1234';
+const WS_URL = process.env.WS_URL ?? 'ws://localhost:8080';
 const N = Number(process.argv[2] ?? 10);
 process.setMaxListeners(N + 10); // each y-websocket provider adds a process exit listener
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

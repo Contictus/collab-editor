@@ -97,46 +97,6 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.0)
 
-  apps/ws-server:
-    dependencies:
-      db:
-        specifier: workspace:*
-        version: link:../../packages/db
-      lib0:
-        specifier: ^0.2.99
-        version: 0.2.117
-      protocol:
-        specifier: workspace:*
-        version: link:../../packages/protocol
-      shared:
-        specifier: workspace:*
-        version: link:../../packages/shared
-      ws:
-        specifier: ^8.18.0
-        version: 8.21.0
-      y-protocols:
-        specifier: ^1.0.6
-        version: 1.0.7(yjs@13.6.31)
-      yjs:
-        specifier: ^13.6.20
-        version: 13.6.31
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.2
-        version: 22.20.0
-      '@types/ws':
-        specifier: ^8.5.13
-        version: 8.18.1
-      tsx:
-        specifier: ^4.19.2
-        version: 4.23.0
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-      y-websocket:
-        specifier: ^2.1.0
-        version: 2.1.0(yjs@13.6.31)
-
   packages/db:
     dependencies:
       '@prisma/client':
@@ -1071,9 +1031,6 @@ packages:
 
   '@types/react@19.2.17':
     resolution: {integrity: sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==}
-
-  '@types/ws@8.18.1':
-    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@typescript-eslint/eslint-plugin@8.62.1':
     resolution: {integrity: sha512-4EQM77WgVNxj7OkL/5b/D/xZsw00G577+UriYTC7JF5opcF3T2AuoeY7ueLaZgSVjSgCS6yOAJB5bRGLPSJUzA==}
@@ -2080,18 +2037,6 @@ packages:
       utf-8-validate:
         optional: true
 
-  ws@8.21.0:
-    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
@@ -2825,10 +2770,6 @@ snapshots:
   '@types/react@19.2.17':
     dependencies:
       csstype: 3.2.3
-
-  '@types/ws@8.18.1':
-    dependencies:
-      '@types/node': 22.20.0
 
   '@typescript-eslint/eslint-plugin@8.62.1(@typescript-eslint/parser@8.62.1(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)':
     dependencies:
@@ -3929,8 +3870,6 @@ snapshots:
     dependencies:
       async-limiter: 1.0.1
     optional: true
-
-  ws@8.21.0: {}
 
   xtend@4.0.2:
     optional: true
