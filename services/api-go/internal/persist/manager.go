@@ -76,9 +76,10 @@ func (m *Manager) persister(docID string) (*Persister, bool) {
 	return p, ok
 }
 
-// forget drops the cursor (after Finalize).
+// forget drops the cursor and doc ref (after Finalize).
 func (m *Manager) forget(docID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.persisters, docID)
+	delete(m.docs, docID)
 }
