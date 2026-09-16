@@ -2,13 +2,19 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Playwright E2E (Faz 5–7). Boots BOTH processes itself — the Next web app (:3000)
- * and the standalone ws-server (:1234) — via the webServer array, polling each
- * health endpoint before running. `reuseExistingServer` means a dev stack you
- * already have up is reused instead of double-booting. Serial, single worker: the
- * collab tests coordinate multiple browser contexts against shared server state.
+ * and the sync server — via the webServer array, polling each health endpoint
+ * before running. `reuseExistingServer` means a dev stack you already have up
+ * is reused instead of double-booting. Serial, single worker: the collab tests
+ * coordinate multiple browser contexts against shared server state.
  *
  * Requires Postgres up (docker compose up -d) and migrations applied.
+ *
+ * WS_GO=1 runs the suite against the Go sync server (:8080) instead of Node
+ * (:1234). DATABASE_URL + JWT_SECRET must be exported (the Go service does
+ * not read the root .env file); the web app keeps loading them itself.
  */
+const useGo = process.env.WS_GO === '1';
+const wsPort = useGo ? 8080 : 1234;
 export default defineConfig({
   testDir: './e2e',
   timeout: 40_000,
@@ -22,14 +28,24 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
-    {
-      command: 'pnpm --filter ws-server dev',
-      url: 'http://localhost:1234/health',
-      reuseExistingServer: true,
-      timeout: 60_000,
-      stdout: 'ignore',
-      stderr: 'pipe',
-    },
+    useGo
+      ? {
+          command: 'go -C ../../services/api-go run ./cmd/server serve-ws',
+          url: 'http://localhost:8080/health',
+          reuseExistingServer: true,
+          timeout: 120_000,
+          stdout: 'ignore',
+          stderr: 'pipe',
+          env: { ...process.env, API_PORT: '8080' },
+        }
+      : {
+          command: 'pnpm --filter ws-server dev',
+          url: 'http://localhost:1234/health',
+          reuseExistingServer: true,
+          timeout: 60_000,
+          stdout: 'ignore',
+          stderr: 'pipe',
+        },
     {
       command: 'pnpm --filter web dev',
       url: 'http://localhost:3000/api/health',
@@ -37,6 +53,10 @@ export default defineConfig({
       timeout: 120_000,
       stdout: 'ignore',
       stderr: 'pipe',
+      env: {
+        ...process.env,
+        NEXT_PUBLIC_WS_URL: `ws://localhost:${wsPort}`,
+      },
     },
   ],
 });
