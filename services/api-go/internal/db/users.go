@@ -36,6 +36,13 @@ func (s *Store) FindUserByID(ctx context.Context, id string) (*User, error) {
 	return &u, nil
 }
 
+// DeleteUser removes a user row (test cleanup; documents must go first —
+// the owner FK is RESTRICT, mirroring Prisma).
+func (s *Store) DeleteUser(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM "User" WHERE "id" = $1`, id)
+	return err
+}
+
 // CreateUser inserts a user. passwordHash must already be an argon2id PHC string
 // (hashing lives in the auth layer, F2) — the store never sees plaintext.
 func (s *Store) CreateUser(ctx context.Context, email, passwordHash string) (*User, error) {
