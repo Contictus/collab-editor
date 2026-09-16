@@ -54,6 +54,8 @@ func (m *Manager) Load(ctx context.Context, docID string) (*crdt.Doc, error) {
 	if err != nil {
 		return nil, err
 	}
+	// The hook attaches AFTER replay, so history load never re-appends
+	// (mirrors Node: loadInto before the update listener).
 	m.mu.Lock()
 	old := m.persisters[docID]
 	m.persisters[docID] = &Persister{docID: docID, clock: st.Clock, sinceSnapshot: st.SinceSnapshot, worker: NewWorker()}
@@ -62,6 +64,7 @@ func (m *Manager) Load(ctx context.Context, docID string) (*crdt.Doc, error) {
 	if old != nil {
 		old.worker.Stop()
 	}
+	m.Attach(docID, doc)
 	return doc, nil
 }
 
