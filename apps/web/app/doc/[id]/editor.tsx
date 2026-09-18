@@ -10,7 +10,9 @@ import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 import { TEXT_KEY } from 'shared/crdt';
 import { offlineRoomKey } from '../../../lib/offline';
+import { presenceList, type PresenceUser } from '../../../lib/presence';
 import { Preview, type PreviewTheme } from './preview';
+import { PresenceList } from './presence-list';
 import { Toolbar } from './toolbar';
 
 type ViewMode = 'split' | 'edit' | 'preview';
@@ -38,6 +40,7 @@ export function Editor({
   const [conn, setConn] = useState<ConnState>('connecting');
   const [synced, setSynced] = useState(false);
   const [text, setText] = useState('');
+  const [peers, setPeers] = useState<PresenceUser[]>([]);
   const [mode, setMode] = useState<ViewMode>('split');
   const [theme, setTheme] = useState<PreviewTheme>('light');
 
@@ -70,8 +73,12 @@ export function Editor({
     const onStatus = (e: { status: string }) =>
       setConn(e.status === 'connected' ? 'connected' : 'offline');
     const onSync = (isSynced: boolean) => setSynced(isSynced);
+    const onAwareness = () =>
+      setPeers(presenceList(provider.awareness.getStates(), provider.awareness.clientID));
     provider.on('status', onStatus);
     provider.on('sync', onSync);
+    provider.awareness.on('change', onAwareness);
+    onAwareness();
 
     const view = new EditorView({
       parent: container,
@@ -92,6 +99,7 @@ export function Editor({
       persistence.destroy();
       provider.off('status', onStatus);
       provider.off('sync', onSync);
+      provider.awareness.off('change', onAwareness);
       view.destroy();
       provider.destroy();
       ydoc.destroy();
