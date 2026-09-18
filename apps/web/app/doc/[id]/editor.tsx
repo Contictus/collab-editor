@@ -9,6 +9,7 @@ import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 import { TEXT_KEY } from 'shared/crdt';
 import { Preview } from './preview';
+import { Toolbar } from './toolbar';
 
 type ConnState = 'connecting' | 'connected' | 'offline';
 
@@ -29,6 +30,7 @@ export function Editor({
   userColor: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
   const [conn, setConn] = useState<ConnState>('connecting');
   const [synced, setSynced] = useState(false);
   const [text, setText] = useState('');
@@ -68,9 +70,11 @@ export function Editor({
         ],
       }),
     });
+    viewRef.current = view;
 
     return () => {
       ytext.unobserve(observer);
+      viewRef.current = null;
       provider.off('status', onStatus);
       provider.off('sync', onSync);
       view.destroy();
@@ -121,6 +125,7 @@ export function Editor({
           title={userColor}
         />
       </div>
+      <Toolbar getView={() => viewRef.current} />
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'stretch' }}>
         <div style={{ flex: '1 1 320px', minWidth: 0 }}>
           <p style={{ color: '#999', fontSize: 12, margin: '6px 0' }}>Source</p>
