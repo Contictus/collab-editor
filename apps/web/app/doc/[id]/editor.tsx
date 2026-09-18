@@ -8,6 +8,7 @@ import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 import { TEXT_KEY } from 'shared/crdt';
+import { Preview } from './preview';
 
 type ConnState = 'connecting' | 'connected' | 'offline';
 
@@ -30,6 +31,7 @@ export function Editor({
   const ref = useRef<HTMLDivElement>(null);
   const [conn, setConn] = useState<ConnState>('connecting');
   const [synced, setSynced] = useState(false);
+  const [text, setText] = useState('');
 
   useEffect(() => {
     const container = ref.current;
@@ -39,6 +41,9 @@ export function Editor({
     const ydoc = new Y.Doc();
     const provider = new WebsocketProvider(wsUrl, docId, ydoc);
     const ytext = ydoc.getText(TEXT_KEY);
+    setText(ytext.toString());
+    const observer = () => setText(ytext.toString());
+    ytext.observe(observer);
 
     provider.awareness.setLocalStateField('user', {
       name: userName,
@@ -65,6 +70,7 @@ export function Editor({
     });
 
     return () => {
+      ytext.unobserve(observer);
       provider.off('status', onStatus);
       provider.off('sync', onSync);
       view.destroy();
@@ -115,18 +121,27 @@ export function Editor({
           title={userColor}
         />
       </div>
-      <div
-        ref={ref}
-        data-testid="editor"
-        style={{
-          border: '1px solid #ddd',
-          borderRadius: 8,
-          minHeight: 320,
-          background: '#fff',
-          boxShadow: '0 1px 6px #0000a08, 0 1px 2px #00000014',
-          overflow: 'hidden',
-        }}
-      />
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'stretch' }}>
+        <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+          <p style={{ color: '#999', fontSize: 12, margin: '6px 0' }}>Source</p>
+          <div
+            ref={ref}
+            data-testid="editor"
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: 8,
+              minHeight: 320,
+              background: '#fff',
+              boxShadow: '0 1px 6px #0000a08, 0 1px 2px #00000014',
+              overflow: 'hidden',
+            }}
+          />
+        </div>
+        <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+          <p style={{ color: '#999', fontSize: 12, margin: '6px 0' }}>Preview</p>
+          <Preview text={text} />
+        </div>
+      </div>
       <p style={{ color: '#999', fontSize: 12, margin: '6px 0 0' }}>
         Markdown · Yjs CRDT · edits merge live — open this doc in another window to see cursors.
       </p>
