@@ -5,9 +5,11 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useEffect, useRef, useState } from 'react';
 import { yCollab } from 'y-codemirror.next';
+import { IndexeddbPersistence } from 'y-indexeddb';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 import { TEXT_KEY } from 'shared/crdt';
+import { offlineRoomKey } from '../../../lib/offline';
 import { Preview, type PreviewTheme } from './preview';
 import { Toolbar } from './toolbar';
 
@@ -50,6 +52,9 @@ export function Editor({
 
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8080';
     const ydoc = new Y.Doc();
+    // Local-first replica (F10): IndexedDB persists every update locally and
+    // merges on reconnect through the CRDT — reloads restore instantly.
+    const persistence = new IndexeddbPersistence(offlineRoomKey(docId), ydoc);
     const provider = new WebsocketProvider(wsUrl, docId, ydoc);
     const ytext = ydoc.getText(TEXT_KEY);
     setText(ytext.toString());
@@ -84,6 +89,7 @@ export function Editor({
     return () => {
       ytext.unobserve(observer);
       viewRef.current = null;
+      persistence.destroy();
       provider.off('status', onStatus);
       provider.off('sync', onSync);
       view.destroy();
