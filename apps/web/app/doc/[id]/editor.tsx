@@ -48,7 +48,7 @@ export function Editor({
     const container = ref.current;
     if (!container) return;
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:1234';
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8080';
     const ydoc = new Y.Doc();
     const provider = new WebsocketProvider(wsUrl, docId, ydoc);
     const ytext = ydoc.getText(TEXT_KEY);
