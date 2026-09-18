@@ -8,8 +8,10 @@ import { yCollab } from 'y-codemirror.next';
 import { WebsocketProvider } from 'y-websocket';
 import * as Y from 'yjs';
 import { TEXT_KEY } from 'shared/crdt';
-import { Preview } from './preview';
+import { Preview, type PreviewTheme } from './preview';
 import { Toolbar } from './toolbar';
+
+type ViewMode = 'split' | 'edit' | 'preview';
 
 type ConnState = 'connecting' | 'connected' | 'offline';
 
@@ -34,6 +36,13 @@ export function Editor({
   const [conn, setConn] = useState<ConnState>('connecting');
   const [synced, setSynced] = useState(false);
   const [text, setText] = useState('');
+  const [mode, setMode] = useState<ViewMode>('split');
+  const [theme, setTheme] = useState<PreviewTheme>('light');
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('editor-theme');
+    if (saved === 'dark' || saved === 'light') setTheme(saved);
+  }, []);
 
   useEffect(() => {
     const container = ref.current;
@@ -86,9 +95,40 @@ export function Editor({
   // Connection label: synced means Yjs syncStep2 received, not just socket open.
   const label = conn === 'connected' ? (synced ? 'connected · synced' : 'connected · syncing') : conn;
   const dot = conn === 'connected' ? '#22a565' : conn === 'connecting' ? '#e0a800' : '#c0392b';
+  const dark = theme === 'dark';
+
+  function toggleTheme() {
+    setTheme((t) => {
+      const next = t === 'dark' ? 'light' : 'dark';
+      window.localStorage.setItem('editor-theme', next);
+      return next;
+    });
+  }
+
+  const modeBtn = (m: ViewMode, testId: string, title: string) => (
+    <button
+      data-testid={testId}
+      title={title}
+      onClick={() => setMode(m)}
+      style={{
+        border: '1px solid #ddd',
+        borderRadius: 6,
+        background: mode === m ? '#111' : '#fff',
+        color: mode === m ? '#fff' : '#111',
+        padding: '4px 10px',
+        fontSize: 13,
+        cursor: 'pointer',
+      }}
+    >
+      {title}
+    </button>
+  );
+
+  const showSource = mode !== 'preview';
+  const showPreview = mode !== 'edit';
 
   return (
-    <div>
+    <div data-theme={theme}>
       <div
         data-testid="conn-status"
         style={{
@@ -126,14 +166,36 @@ export function Editor({
         />
       </div>
       <Toolbar getView={() => viewRef.current} />
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '0 0 8px' }}>
+        {modeBtn('split', 'view-split', 'Split')}
+        {modeBtn('edit', 'view-edit', 'Edit')}
+        {modeBtn('preview', 'view-preview', 'Preview')}
+        <button
+          data-testid="theme-toggle"
+          title="Toggle dark mode"
+          onClick={toggleTheme}
+          style={{
+            border: '1px solid #ddd',
+            borderRadius: 6,
+            background: dark ? '#222' : '#fff',
+            color: dark ? '#fff' : '#111',
+            padding: '4px 10px',
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          {dark ? 'Light' : 'Dark'}
+        </button>
+      </div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'stretch' }}>
-        <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+        {/* Source stays mounted when hidden — unmount would kill the Yjs binding. */}
+        <div style={{ flex: '1 1 320px', minWidth: 0, display: showSource ? undefined : 'none' }}>
           <p style={{ color: '#999', fontSize: 12, margin: '6px 0' }}>Source</p>
           <div
             ref={ref}
             data-testid="editor"
             style={{
-              border: '1px solid #ddd',
+              border: `1px solid ${dark ? '#444' : '#ddd'}`,
               borderRadius: 8,
               minHeight: 320,
               background: '#fff',
@@ -142,10 +204,12 @@ export function Editor({
             }}
           />
         </div>
+        {showPreview && (
         <div style={{ flex: '1 1 320px', minWidth: 0 }}>
           <p style={{ color: '#999', fontSize: 12, margin: '6px 0' }}>Preview</p>
-          <Preview text={text} />
+          <Preview text={text} theme={theme} />
         </div>
+        )}
       </div>
       <p style={{ color: '#999', fontSize: 12, margin: '6px 0 0' }}>
         Markdown · Yjs CRDT · edits merge live — open this doc in another window to see cursors.
