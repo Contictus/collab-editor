@@ -57,3 +57,12 @@ test('reload restores content from local replica', async ({ browser }) => {
   await expect(page.locator('.cm-content')).toContainText('offline-marker-F10');
   await ctx.close();
 });
+
+test('two clients see each other in presence', async ({ browser }) => {
+  const a = await openEditor(browser);
+  const b = await openEditor(browser);
+  await expect(a.page.getByTestId('presence-count')).toContainText('2 online');
+  await expect(b.page.getByTestId('presence-count')).toContainText('2 online');
+  await a.ctx.close();
+  await b.ctx.close();
+});
