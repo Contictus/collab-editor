@@ -178,6 +178,9 @@ export function Editor({
           }}
           title={userColor}
         />
+        <span style={{ marginLeft: 'auto' }}>
+          <PresenceList users={peers} />
+        </span>
       </div>
       <Toolbar getView={() => viewRef.current} />
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '0 0 8px' }}>
