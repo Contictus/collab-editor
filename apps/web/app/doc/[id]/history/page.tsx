@@ -6,6 +6,7 @@ import { requireSession } from '../../../../lib/session';
 import { displayName } from '../../../../lib/user-color';
 import { ReplayExplorer } from './replay-explorer';
 import { CompareView } from './compare-view';
+import { RestoreButton } from './restore-button';
 
 /**
  * Audit view (Faz 6) — the persisted event history of a document: op-log update
@@ -55,6 +56,18 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
       <section style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ margin: 0, fontSize: 16 }}>Compare</h2>
         <CompareView
+          docId={doc.id}
+          baseUpdateId={audit.baseUpdateId}
+          updates={audit.updates}
+        />
+      </section>
+
+      <section style={{ display: 'grid', gap: 8 }}>
+        <h2 style={{ margin: 0, fontSize: 16 }}>Restore</h2>
+        <p style={{ margin: 0, fontSize: 13, color: '#777' }}>
+          Restore the live document to a past point. Applied as new edits — history is never rewritten.
+        </p>
+        <RestoreButton
           docId={doc.id}
           baseUpdateId={audit.baseUpdateId}
           updates={audit.updates}
