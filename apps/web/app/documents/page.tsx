@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import { listDocuments } from '../../lib/document-service';
 import { requireSession } from '../../lib/session';
 import { logoutAction } from '../actions/auth';
 import { CreateDocumentForm } from './create-form';
+import { DocumentList } from './document-list';
 
 /**
  * Protected documents list (Faz 2). Owner-scoped: requireSession then list only
@@ -54,48 +54,7 @@ export default async function DocumentsPage() {
           No documents yet. Create one above — it becomes a Yjs room on first open.
         </p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-          {docs.map((d) => (
-            <Link
-              key={d.id}
-              href={`/doc/${d.id}`}
-              style={{
-                display: 'block',
-                textDecoration: 'none',
-                color: 'inherit',
-                border: '1px solid #e8e8e8',
-                borderRadius: 12,
-                padding: 14,
-                background: '#fff',
-                boxShadow: '0 1px 4px #00000006',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <div style={{ fontWeight: 600, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {d.title}
-                </div>
-                {!d.isOwner && (
-                  <span
-                    style={{
-                      fontSize: 10,
-                      letterSpacing: 0.3,
-                      textTransform: 'uppercase',
-                      padding: '2px 6px',
-                      borderRadius: 999,
-                      background: '#eaf0ff',
-                      color: '#3b5bdb',
-                      border: '1px solid #dbe4ff',
-                    }}
-                  >
-                    shared
-                  </span>
-                )}
-              </div>
-              <div style={{ fontSize: 12, color: '#999' }}>{d.updatedAt.toLocaleString()}</div>
-              <div style={{ marginTop: 8, fontSize: 12, color: '#111', fontWeight: 600 }}>Open →</div>
-            </Link>
-          ))}
-        </div>
+        <DocumentList docs={docs} />
       )}
     </main>
   );
