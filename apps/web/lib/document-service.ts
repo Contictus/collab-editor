@@ -65,14 +65,22 @@ export function getOwnedDocument(id: string, ownerId: string) {
  * Access gate (Faz 8): the document if the user is the owner OR a collaborator,
  * else null (404/403 upstream). This is the SAME predicate the Go sync server enforces
  * at the handshake — REST reads and live sync share one authorization model.
+ * Role is 'owner', 'editor', or 'viewer' (F12 read-only).
  */
 export async function getAccessibleDocument(id: string, userId: string) {
   const doc = await prisma.document.findFirst({
     where: { id, OR: [{ ownerId: userId }, { collaborators: { some: { userId } } }] },
-    select: { id: true, title: true, ownerId: true },
+    select: {
+      id: true,
+      title: true,
+      ownerId: true,
+      collaborators: { where: { userId }, select: { role: true } },
+    },
   });
   if (!doc) return null;
-  return { id: doc.id, title: doc.title, isOwner: doc.ownerId === userId };
+  const isOwner = doc.ownerId === userId;
+  const role = isOwner ? 'owner' : (doc.collaborators[0]?.role as CollaboratorRole | undefined) ?? 'editor';
+  return { id: doc.id, title: doc.title, isOwner, role };
 }
 
 export class ShareError extends Error {}
