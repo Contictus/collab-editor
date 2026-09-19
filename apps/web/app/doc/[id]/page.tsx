@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getAccessibleDocument, listCollaborators } from '../../../lib/document-service';
+import { getAccessibleDocument, getPublicId, listCollaborators } from '../../../lib/document-service';
 import { requireSession } from '../../../lib/session';
 import { displayName, userColor } from '../../../lib/user-color';
 import { CopyLink } from './copy-link';
 import { DocControls } from './doc-controls';
 import { Editor } from './editor';
+import { PublicLinkControls } from './public-link-controls';
 import { ShareControls } from './share-controls';
 
 /**
@@ -22,6 +23,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
   if (!doc) notFound();
 
   const collaborators = doc.isOwner ? await listCollaborators(doc.id) : [];
+  const publicId = doc.isOwner ? await getPublicId(doc.id, user.id) : null;
 
   return (
     <main style={{ display: 'grid', gap: 14 }}>
@@ -41,6 +43,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
         <>
           <DocControls docId={doc.id} title={doc.title} />
           <ShareControls docId={doc.id} collaborators={collaborators} />
+          <PublicLinkControls docId={doc.id} initialPublicId={publicId} />
         </>
       ) : doc.role === 'viewer' ? (
         <p data-testid="viewer-banner" style={{ color: '#666', margin: 0, fontSize: 13, padding: '8px 10px', border: '1px solid #e8e8e8', borderRadius: 8, background: '#f4f4f4' }}>
