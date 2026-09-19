@@ -50,6 +50,16 @@ export function ShareControls({
           data-testid="share-email"
           style={{ flex: 1, padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6 }}
         />
+        <select
+          name="role"
+          defaultValue="editor"
+          data-testid="share-role"
+          title="Access level"
+          style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6, background: '#fff' }}
+        >
+          <option value="editor">Can edit</option>
+          <option value="viewer">Can view</option>
+        </select>
         <button
           type="submit"
           disabled={pending}
@@ -85,7 +95,22 @@ export function ShareControls({
                 fontSize: 13,
               }}
             >
-              <span style={{ color: '#333' }}>{c.email}</span>
+              <span style={{ color: '#333' }}>
+                {c.email}{' '}
+                <span
+                  data-testid={`collab-role-${c.userId}`}
+                  title={c.role === 'viewer' ? 'Read-only' : 'Can edit'}
+                  style={{
+                    fontSize: 11,
+                    padding: '1px 6px',
+                    borderRadius: 4,
+                    background: c.role === 'viewer' ? '#f0f0f0' : '#e6f4ea',
+                    color: c.role === 'viewer' ? '#666' : '#1a7a4a',
+                  }}
+                >
+                  {c.role}
+                </span>
+              </span>
               <form action={unshareDocumentAction.bind(null, docId, c.userId)}>
                 <button
                   type="submit"
