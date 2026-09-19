@@ -36,7 +36,7 @@ export interface ShareState {
   ok?: string;
 }
 
-/** Owner-only: grant another user (by email) collaborator access (Faz 8). */
+/** Owner-only: grant another user (by email) collaborator access with a role (Faz 8, roles F12). */
 export async function shareDocumentAction(
   docId: string,
   _prev: ShareState,
@@ -47,14 +47,16 @@ export async function shareDocumentAction(
 
   const parsed = emailSchema.safeParse(formData.get('email'));
   if (!parsed.success) return { error: 'Enter a valid email.' };
+  const role = formData.get('role');
+  if (role !== 'editor' && role !== 'viewer') return { error: 'Pick a role.' };
 
   // Normalize: trim and lower-case before lookup — matches auth registration (service.go Trim+ToLower).
   const email = parsed.data.trim().toLowerCase();
 
   try {
-    const added = await shareDocument(docId, user.id, email);
+    const added = await shareDocument(docId, user.id, email, role);
     revalidatePath(`/doc/${docId}`);
-    return { ok: `Shared with ${added.email}.` };
+    return { ok: `Shared with ${added.email} (${added.role}).` };
   } catch (err) {
     if (err instanceof ShareError) return { error: err.message };
     throw err;
