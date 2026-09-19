@@ -13,6 +13,7 @@ import { offlineRoomKey } from '../../../lib/offline';
 import { presenceList, type PresenceUser } from '../../../lib/presence';
 import { Preview, type PreviewTheme } from './preview';
 import { PresenceList } from './presence-list';
+import { ExportButtons } from './export-buttons';
 import { Toolbar } from './toolbar';
 
 type ViewMode = 'split' | 'edit' | 'preview';
@@ -28,10 +29,12 @@ type ConnState = 'connecting' | 'connected' | 'offline';
  */
 export function Editor({
   docId,
+  title,
   userName,
   userColor,
 }: {
   docId: string;
+  title: string;
   userName: string;
   userColor: string;
 }) {
@@ -183,7 +186,7 @@ export function Editor({
         </span>
       </div>
       <Toolbar getView={() => viewRef.current} />
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '0 0 8px' }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '0 0 8px', alignItems: 'center' }}>
         {modeBtn('split', 'view-split', 'Split')}
         {modeBtn('edit', 'view-edit', 'Edit')}
         {modeBtn('preview', 'view-preview', 'Preview')}
@@ -203,6 +206,9 @@ export function Editor({
         >
           {dark ? 'Light' : 'Dark'}
         </button>
+        <span style={{ marginLeft: 'auto' }}>
+          <ExportButtons title={title} text={text} />
+        </span>
       </div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'stretch' }}>
         {/* Source stays mounted when hidden — unmount would kill the Yjs binding. */}

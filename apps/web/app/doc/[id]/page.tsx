@@ -47,7 +47,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
           Shared with you · collaborator · live sync active
         </p>
       )}
-      <Editor docId={doc.id} userName={displayName(user.email)} userColor={userColor(user.email)} />
+      <Editor docId={doc.id} title={doc.title} userName={displayName(user.email)} userColor={userColor(user.email)} />
       <p style={{ margin: 0, color: '#999', fontSize: 11 }}>
         Invite via Share, open in second window to see cursors. History keeps op-log snapshots for replay.
       </p>
