@@ -23,6 +23,7 @@ type Document struct {
 	ID        string
 	Title     string
 	OwnerID   string
+	PublicID  *string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -36,9 +37,11 @@ type DocumentSummary struct {
 }
 
 // Collaborator mirrors CollaboratorSummary in document-service.ts.
+// Role is 'editor' (read+write) or 'viewer' (read-only).
 type Collaborator struct {
 	UserID    string
 	Email     string
+	Role      string
 	CreatedAt time.Time
 }
 
