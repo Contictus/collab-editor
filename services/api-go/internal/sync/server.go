@@ -71,7 +71,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	p := &peer{conn: conn}
+	p := &peer{conn: conn, readOnly: hs.ReadOnly}
 	s.track(p)
 	room.Join(p)
 	// Handshake opener (mirrors setupConnection: step1 immediately).
@@ -111,6 +111,15 @@ func (s *Server) loop(room *Room, p *peer) {
 		}
 		switch typ {
 		case crdt.MsgSync:
+			// Viewers read: step1 is answered (server step2 converges their
+			// replica), but their step2/updates never touch the room doc —
+			// so they are never broadcast or persisted either.
+			if p.readOnly {
+				kind, err := crdt.SyncMessageKind(payload)
+				if err != nil || kind != crdt.SyncStep1 {
+					continue
+				}
+			}
 			reply, err := crdt.HandleSyncMessage(room.Document(), payload, p)
 			if err != nil || reply == nil {
 				continue
@@ -192,10 +201,12 @@ func (s *Server) CloseConnections() {
 
 // peer adapts *websocket.Conn to Sender with a write mutex (concurrent
 // Broadcasts from other connections' loops must not interleave frames).
+// readOnly marks viewer-role peers (F12): sync reads, no writes.
 type peer struct {
-	conn *websocket.Conn
-	wmu  sync.Mutex
-	once sync.Once
+	conn     *websocket.Conn
+	readOnly bool
+	wmu      sync.Mutex
+	once     sync.Once
 }
 
 func (p *peer) Send(msg []byte) error {

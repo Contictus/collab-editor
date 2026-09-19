@@ -22,10 +22,20 @@ type Authorizer interface {
 	CheckDocumentAccess(ctx context.Context, docID, userID string) (bool, error)
 }
 
+// RoleChecker optionally resolves the access level ('owner', 'editor',
+// 'viewer'). *db.Store satisfies it; stubs without it default to editor
+// (full write) — backwards compatible with existing tests and servers.
+type RoleChecker interface {
+	CheckDocumentRole(ctx context.Context, docID, userID string) (string, error)
+}
+
 // Handshake is an authorized upgrade request.
 type Handshake struct {
 	DocID string
 	User  *auth.SessionUser
+	// ReadOnly marks viewer-role peers: they sync (read) but their
+	// step2/updates are dropped before touching the room doc.
+	ReadOnly bool
 }
 
 // ParseUpgrade extracts docID and token from the request (no verification).
@@ -69,5 +79,13 @@ func AuthorizeUpgrade(
 	if !ok {
 		return nil, http.StatusForbidden, errForbidden
 	}
-	return &Handshake{DocID: docID, User: user}, http.StatusOK, nil
+	readOnly := false
+	if rc, ok := az.(RoleChecker); ok {
+		role, err := rc.CheckDocumentRole(ctx, docID, user.ID)
+		if err != nil {
+			return nil, http.StatusInternalServerError, err
+		}
+		readOnly = role == "viewer"
+	}
+	return &Handshake{DocID: docID, User: user, ReadOnly: readOnly}, http.StatusOK, nil
 }
