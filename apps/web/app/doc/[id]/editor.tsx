@@ -30,11 +30,13 @@ type ConnState = 'connecting' | 'connected' | 'offline';
 export function Editor({
   docId,
   title,
+  readOnly,
   userName,
   userColor,
 }: {
   docId: string;
   title: string;
+  readOnly: boolean;
   userName: string;
   userColor: string;
 }) {
@@ -91,6 +93,9 @@ export function Editor({
           markdown(),
           yCollab(ytext, provider.awareness),
           EditorView.lineWrapping,
+          // Viewers stream live state but cannot type (server drops their
+          // writes too — defense in depth, F12 read-only).
+          EditorView.editable.of(!readOnly),
         ],
       }),
     });
@@ -107,7 +112,7 @@ export function Editor({
       provider.destroy();
       ydoc.destroy();
     };
-  }, [docId, userName, userColor]);
+  }, [docId, readOnly, userName, userColor]);
 
   // Connection label: synced means Yjs syncStep2 received, not just socket open.
   const label = conn === 'connected' ? (synced ? 'connected · synced' : 'connected · syncing') : conn;

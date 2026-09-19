@@ -42,12 +42,16 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
           <DocControls docId={doc.id} title={doc.title} />
           <ShareControls docId={doc.id} collaborators={collaborators} />
         </>
+      ) : doc.role === 'viewer' ? (
+        <p data-testid="viewer-banner" style={{ color: '#666', margin: 0, fontSize: 13, padding: '8px 10px', border: '1px solid #e8e8e8', borderRadius: 8, background: '#f4f4f4' }}>
+          Shared with you · read-only viewer · live updates stream in
+        </p>
       ) : (
         <p style={{ color: '#777', margin: 0, fontSize: 13, padding: '8px 10px', border: '1px solid #e8e8e8', borderRadius: 8, background: '#fafaf7' }}>
           Shared with you · collaborator · live sync active
         </p>
       )}
-      <Editor docId={doc.id} title={doc.title} userName={displayName(user.email)} userColor={userColor(user.email)} />
+      <Editor docId={doc.id} title={doc.title} readOnly={doc.role === 'viewer'} userName={displayName(user.email)} userColor={userColor(user.email)} />
       <p style={{ margin: 0, color: '#999', fontSize: 11 }}>
         Invite via Share, open in second window to see cursors. History keeps op-log snapshots for replay.
       </p>
