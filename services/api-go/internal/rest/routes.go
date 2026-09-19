@@ -28,6 +28,9 @@ func (a *API) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/documents/{id}/replay", func(w http.ResponseWriter, r *http.Request) {
 		a.handleReplay(w, r, r.PathValue("id"))
 	})
+	mux.HandleFunc("POST /api/documents/{id}/restore", func(w http.ResponseWriter, r *http.Request) {
+		a.handleRestore(w, r, r.PathValue("id"))
+	})
 	mux.HandleFunc("POST /api/documents/{id}/share", func(w http.ResponseWriter, r *http.Request) {
 		a.handleShareDocument(w, r, r.PathValue("id"))
 	})
