@@ -12,6 +12,7 @@ import {
   shareDocument,
   unshareDocument,
 } from '../../lib/document-service';
+import { RestoreError, restoreAt } from '../../lib/restore-service';
 import { requireSession } from '../../lib/session';
 
 export interface CreateDocState {
@@ -95,4 +96,22 @@ export async function deleteDocumentAction(docId: string): Promise<void> {
   const user = await requireSession();
   await deleteDocument(docId, user.id); // no-op if not owned
   redirect('/documents');
+}
+
+export interface RestoreState {
+  error?: string;
+  ok?: string;
+}
+
+/** Restore the document text to a past replay point (F11). Accessible editors only. */
+export async function restoreDocumentAction(docId: string, at: string): Promise<RestoreState> {
+  try {
+    await restoreAt(docId, at);
+    revalidatePath(`/doc/${docId}`);
+    revalidatePath(`/doc/${docId}/history`);
+    return { ok: `Restored to update #${at}.` };
+  } catch (err) {
+    if (err instanceof RestoreError) return { error: err.message };
+    throw err;
+  }
 }
