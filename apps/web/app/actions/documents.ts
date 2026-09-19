@@ -9,6 +9,7 @@ import {
   deleteDocument,
   getOwnedDocument,
   renameDocument,
+  setPublicLink,
   shareDocument,
   unshareDocument,
 } from '../../lib/document-service';
@@ -116,4 +117,28 @@ export async function restoreDocumentAction(docId: string, at: string): Promise<
     if (err instanceof RestoreError) return { error: err.message };
     throw err;
   }
+}
+
+export interface PublicLinkState {
+  error?: string;
+  ok?: string;
+  publicId?: string | null;
+}
+
+/** Owner-only: enable or rotate the public read-only link (F12). */
+export async function enablePublicLinkAction(docId: string): Promise<PublicLinkState> {
+  const user = await requireSession();
+  const token = await setPublicLink(docId, user.id, true);
+  if (token === null) return { error: 'Not found.' };
+  revalidatePath(`/doc/${docId}`);
+  return { ok: 'Public link enabled.', publicId: token };
+}
+
+/** Owner-only: disable the public read-only link (F12). */
+export async function disablePublicLinkAction(docId: string): Promise<PublicLinkState> {
+  const user = await requireSession();
+  const token = await setPublicLink(docId, user.id, false);
+  if (token === null && !(await getOwnedDocument(docId, user.id))) return { error: 'Not found.' };
+  revalidatePath(`/doc/${docId}`);
+  return { ok: 'Public link disabled.', publicId: null };
 }

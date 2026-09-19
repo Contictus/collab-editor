@@ -168,6 +168,15 @@ export async function getPublicDocument(publicId: string) {
   return doc;
 }
 
+/** Current public token of an owned document (owner-scoped). */
+export async function getPublicId(documentId: string, ownerId: string): Promise<string | null> {
+  const doc = await prisma.document.findFirst({
+    where: { id: documentId, ownerId },
+    select: { publicId: true },
+  });
+  return doc?.publicId ?? null;
+}
+
 /**
  * Read-only SSR bootstrap text: latest snapshot + updates recorded after it,
  * replayed via the shared CRDT helper (load-on-open, data-model.md). Empty string
