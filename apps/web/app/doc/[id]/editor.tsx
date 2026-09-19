@@ -190,7 +190,7 @@ export function Editor({
           <PresenceList users={peers} />
         </span>
       </div>
-      <Toolbar getView={() => viewRef.current} />
+      {!readOnly && <Toolbar getView={() => viewRef.current} />}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '0 0 8px', alignItems: 'center' }}>
         {modeBtn('split', 'view-split', 'Split')}
         {modeBtn('edit', 'view-edit', 'Edit')}
