@@ -19,16 +19,20 @@ import (
 	"strings"
 
 	"github.com/Contictus/collab-editor/services/api-go/internal/db"
+	gosync "github.com/Contictus/collab-editor/services/api-go/internal/sync"
 )
 
 // API wires handlers to a store. SecureCookies mirrors the Node behavior
 // (Secure on in production, off in dev). Limiter throttles auth attempts
-// when set (nil disables, e.g. unit tests).
+// when set (nil disables, e.g. unit tests). Rooms is the live sync registry
+// (F11 restore applies through the authoritative room so broadcast +
+// persistence flow untouched); nil means sync is not served here.
 type API struct {
 	Store         *db.Store
 	Secret        string
 	SecureCookies bool
 	Limiter       *RateLimiter
+	Rooms         *gosync.Registry
 }
 
 // clientIP mirrors the Server Action helper: first X-Forwarded-For entry,

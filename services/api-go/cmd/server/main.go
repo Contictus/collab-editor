@@ -103,6 +103,7 @@ func runWS(ctx context.Context, cfg config.Config, mux *http.ServeMux) {
 		Secret:        secret,
 		SecureCookies: os.Getenv("NODE_ENV") == "production",
 		Limiter:       rest.NewRateLimiter(),
+		Rooms:         reg,
 	}
 	api.Routes(mux)
 	syncSrv := gosync.NewServer(secret, reg, store, maxPayload)
