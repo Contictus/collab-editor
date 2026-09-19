@@ -31,6 +31,15 @@ func (a *API) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/documents/{id}/restore", func(w http.ResponseWriter, r *http.Request) {
 		a.handleRestore(w, r, r.PathValue("id"))
 	})
+	mux.HandleFunc("POST /api/documents/{id}/public", func(w http.ResponseWriter, r *http.Request) {
+		a.handleEnablePublicLink(w, r, r.PathValue("id"))
+	})
+	mux.HandleFunc("DELETE /api/documents/{id}/public", func(w http.ResponseWriter, r *http.Request) {
+		a.handleDisablePublicLink(w, r, r.PathValue("id"))
+	})
+	mux.HandleFunc("GET /api/public/{token}", func(w http.ResponseWriter, r *http.Request) {
+		a.handleGetPublicDocument(w, r, r.PathValue("token"))
+	})
 	mux.HandleFunc("POST /api/documents/{id}/share", func(w http.ResponseWriter, r *http.Request) {
 		a.handleShareDocument(w, r, r.PathValue("id"))
 	})

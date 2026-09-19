@@ -30,16 +30,19 @@ func (a *API) requireOwner(w http.ResponseWriter, r *http.Request, id string) (*
 
 type shareForm struct {
 	Email string `json:"email"`
+	Role  string `json:"role"`
 }
 
 type collaboratorJSON struct {
 	UserID    string `json:"userId"`
 	Email     string `json:"email"`
+	Role      string `json:"role"`
 	CreatedAt string `json:"createdAt"`
 }
 
-// handleShareDocument grants a user (by email) access (shareDocument parity,
-// JSON surface): 201 + grant, 404 on unknown doc/email, 409 on self-share.
+// handleShareDocument grants a user (by email) access with a role (shareDocument
+// parity, JSON surface): 201 + grant, 400 on a bad role, 404 on unknown
+// doc/email, 409 on self-share. Empty role defaults to editor.
 func (a *API) handleShareDocument(w http.ResponseWriter, r *http.Request, id string) {
 	owner, ok := a.requireOwner(w, r, id)
 	if !ok {
@@ -50,6 +53,10 @@ func (a *API) handleShareDocument(w http.ResponseWriter, r *http.Request, id str
 		writeErr(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
+	role := form.Role
+	if role == "" {
+		role = "editor"
+	}
 	invitee, err := a.Store.FindUserByEmail(r.Context(), form.Email)
 	if err != nil {
 		writeErr(w, http.StatusInternalServerError, "internal error")
@@ -59,19 +66,21 @@ func (a *API) handleShareDocument(w http.ResponseWriter, r *http.Request, id str
 		writeErr(w, http.StatusNotFound, "No user with that email.")
 		return
 	}
-	c, err := a.Store.ShareDocument(r.Context(), id, owner.ID, invitee.ID)
+	c, err := a.Store.ShareDocumentWithRole(r.Context(), id, owner.ID, invitee.ID, role)
 	if err != nil {
 		switch {
 		case errors.Is(err, db.ErrNotOwned):
 			writeErr(w, http.StatusNotFound, "Document not found.")
 		case errors.Is(err, db.ErrSelfShare):
 			writeErr(w, http.StatusConflict, "You already own this document.")
+		case errors.Is(err, db.ErrBadRole):
+			writeErr(w, http.StatusBadRequest, "Unknown role (want editor or viewer).")
 		default:
 			writeErr(w, http.StatusInternalServerError, "internal error")
 		}
 		return
 	}
-	writeJSON(w, http.StatusCreated, collaboratorJSON{UserID: c.UserID, Email: c.Email, CreatedAt: iso(c.CreatedAt)})
+	writeJSON(w, http.StatusCreated, collaboratorJSON{UserID: c.UserID, Email: c.Email, Role: c.Role, CreatedAt: iso(c.CreatedAt)})
 }
 
 // handleListCollaborators returns grants, oldest first (owner-only).
@@ -86,7 +95,7 @@ func (a *API) handleListCollaborators(w http.ResponseWriter, r *http.Request, id
 	}
 	out := make([]collaboratorJSON, 0, len(rows))
 	for _, c := range rows {
-		out = append(out, collaboratorJSON{UserID: c.UserID, Email: c.Email, CreatedAt: iso(c.CreatedAt)})
+		out = append(out, collaboratorJSON{UserID: c.UserID, Email: c.Email, Role: c.Role, CreatedAt: iso(c.CreatedAt)})
 	}
 	writeJSON(w, http.StatusOK, out)
 }
