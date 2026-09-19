@@ -156,7 +156,7 @@ func (s *Store) ShareDocument(ctx context.Context, documentID, ownerID, inviteeI
 // ListCollaborators returns the grants on a document, oldest first.
 func (s *Store) ListCollaborators(ctx context.Context, documentID string) ([]Collaborator, error) {
 	rows, err := s.pool.Query(ctx,
-		`SELECT c."userId", u."email", c."createdAt" FROM "DocumentCollaborator" c
+		`SELECT c."userId", u."email", c."role", c."createdAt" FROM "DocumentCollaborator" c
 		 JOIN "User" u ON u."id" = c."userId"
 		 WHERE c."documentId" = $1 ORDER BY c."createdAt" ASC`, documentID)
 	if err != nil {
@@ -166,7 +166,7 @@ func (s *Store) ListCollaborators(ctx context.Context, documentID string) ([]Col
 	var out []Collaborator
 	for rows.Next() {
 		var c Collaborator
-		if err := rows.Scan(&c.UserID, &c.Email, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.UserID, &c.Email, &c.Role, &c.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, c)
