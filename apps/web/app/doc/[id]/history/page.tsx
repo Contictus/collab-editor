@@ -5,6 +5,7 @@ import { getAccessibleDocument } from '../../../../lib/document-service';
 import { requireSession } from '../../../../lib/session';
 import { displayName } from '../../../../lib/user-color';
 import { ReplayExplorer } from './replay-explorer';
+import { CompareView } from './compare-view';
 
 /**
  * Audit view (Faz 6) — the persisted event history of a document: op-log update
@@ -45,6 +46,15 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
       <section style={{ display: 'grid', gap: 8 }}>
         <h2 style={{ margin: 0, fontSize: 16 }}>Replay</h2>
         <ReplayExplorer
+          docId={doc.id}
+          baseUpdateId={audit.baseUpdateId}
+          updates={audit.updates}
+        />
+      </section>
+
+      <section style={{ display: 'grid', gap: 8 }}>
+        <h2 style={{ margin: 0, fontSize: 16 }}>Compare</h2>
+        <CompareView
           docId={doc.id}
           baseUpdateId={audit.baseUpdateId}
           updates={audit.updates}
