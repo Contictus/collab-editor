@@ -82,6 +82,21 @@ func HandleSyncMessage(d *Doc, inner []byte, origin any) (replyFrame []byte, err
 	return EncodeSyncFrame(reply), nil
 }
 
+// Inner sync message kinds (y-protocols), re-exported for the read-only gate.
+const (
+	SyncStep1 = sync.MsgSyncStep1
+	SyncStep2 = sync.MsgSyncStep2
+	SyncUpdate = sync.MsgUpdate
+)
+
+// SyncMessageKind peeks the inner y-protocols sync type (step1/step2/update)
+// without applying it — read-only peers answer step1 (so they can read) but
+// their step2/updates are dropped before touching the room doc.
+func SyncMessageKind(inner []byte) (int, error) {
+	kind, _, err := sync.ReadSyncMessage(inner)
+	return kind, err
+}
+
 // Change mirrors the awareness change shape {added, updated, removed}.
 type Change struct {
 	Added   []uint64
