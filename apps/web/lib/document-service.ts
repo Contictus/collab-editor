@@ -77,22 +77,27 @@ export async function getAccessibleDocument(id: string, userId: string) {
 
 export class ShareError extends Error {}
 
+export type CollaboratorRole = 'editor' | 'viewer';
+
 export interface CollaboratorSummary {
   userId: string;
   email: string;
+  role: CollaboratorRole;
   createdAt: Date;
 }
 
 /**
- * Grant a user (by email) collaborator access to a document (Faz 8). Owner-only:
- * the caller must pass the verified ownerId. Idempotent — re-sharing is a no-op.
- * Throws ShareError on unknown email, self-share, or a non-owned document.
+ * Grant a user (by email) collaborator access to a document (Faz 8, roles F12).
+ * Owner-only: the caller must pass the verified ownerId. Re-sharing updates the
+ * role. Throws ShareError on unknown email, self-share, bad role, or non-owned doc.
  */
 export async function shareDocument(
   documentId: string,
   ownerId: string,
   inviteeEmail: string,
+  role: CollaboratorRole = 'editor',
 ): Promise<CollaboratorSummary> {
+  if (role !== 'editor' && role !== 'viewer') throw new ShareError('Unknown role.');
   const doc = await prisma.document.findFirst({
     where: { id: documentId, ownerId },
     select: { id: true },
@@ -108,11 +113,11 @@ export async function shareDocument(
 
   const row = await prisma.documentCollaborator.upsert({
     where: { documentId_userId: { documentId, userId: invitee.id } },
-    create: { documentId, userId: invitee.id },
-    update: {},
-    select: { createdAt: true },
+    create: { documentId, userId: invitee.id, role },
+    update: { role },
+    select: { createdAt: true, role: true },
   });
-  return { userId: invitee.id, email: invitee.email, createdAt: row.createdAt };
+  return { userId: invitee.id, email: invitee.email, role: row.role as CollaboratorRole, createdAt: row.createdAt };
 }
 
 /** Collaborators of a document (owner-scoped; caller verifies ownership). */
@@ -120,14 +125,39 @@ export async function listCollaborators(documentId: string): Promise<Collaborato
   const rows = await prisma.documentCollaborator.findMany({
     where: { documentId },
     orderBy: { createdAt: 'asc' },
-    select: { userId: true, createdAt: true, user: { select: { email: true } } },
+    select: { userId: true, role: true, createdAt: true, user: { select: { email: true } } },
   });
-  return rows.map((r) => ({ userId: r.userId, email: r.user.email, createdAt: r.createdAt }));
+  return rows.map((r) => ({ userId: r.userId, email: r.user.email, role: r.role as CollaboratorRole, createdAt: r.createdAt }));
 }
 
 /** Revoke a collaborator's access (owner-only; caller verifies ownership). */
 export async function unshareDocument(documentId: string, userId: string): Promise<void> {
   await prisma.documentCollaborator.deleteMany({ where: { documentId, userId } });
+}
+
+/**
+ * Public read-only link (F12). Owner-only. Enable mints a random token,
+ * disable clears it. Returns the token or null.
+ */
+export async function setPublicLink(documentId: string, ownerId: string, enable: boolean): Promise<string | null> {
+  const { randomBytes } = await import('node:crypto');
+  const token = enable ? randomBytes(16).toString('hex') : null;
+  const res = await prisma.document.updateMany({
+    where: { id: documentId, ownerId },
+    data: { publicId: token },
+  });
+  if (res.count === 0) return null;
+  return token;
+}
+
+/** Public document lookup by token (no auth — the token is the capability). */
+export async function getPublicDocument(publicId: string) {
+  const doc = await prisma.document.findUnique({
+    where: { publicId },
+    select: { id: true, title: true },
+  });
+  if (!doc) return null;
+  return doc;
 }
 
 /**
